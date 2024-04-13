@@ -48,7 +48,7 @@ services:
     image: grubykarol/locust
     environment:
       - ATTACKED_HOST=http://nginx:80
-      - LOCUST_OPTS=-r 10
+      - LOCUST_OPTS=-r 10 -u 10
     volumes:
       - .:/locust
     ports:

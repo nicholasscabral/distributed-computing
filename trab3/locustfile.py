@@ -5,17 +5,19 @@ class WebsiteUser(HttpUser):
     wait_time = between(5, 9)
 
     @task
-    def index(self):
-        self.client.get("/")
+    def create_post_with_large_image(self):
+        with open("/locust/1mb-image.jpg", "rb") as f:
+            image_data = f.read()
+        self.client.post("/wp-admin/post-new.php", files={"file": image_data})
 
     @task
-    def blog_post_with_image(self):
-        self.client.get("/blog-post-with-image")
+    def create_post_with_medium_image(self):
+        with open("/locust/300kb-image.jpg", "rb") as f:
+            image_data = f.read()
+        self.client.post("/wp-admin/post-new.php", files={"file": image_data})
 
     @task
-    def blog_post_with_text(self):
-        self.client.get("/blog-post-with-text")
-
-    @task
-    def blog_post_with_small_image(self):
-        self.client.get("/blog-post-with-small-image")
+    def create_post_with_large_text(self):
+        with open("/locust/400kb-text.txt", "r") as f:
+            text_data = f.read()
+        self.client.post("/wp-admin/post-new.php", data={"content": text_data})
