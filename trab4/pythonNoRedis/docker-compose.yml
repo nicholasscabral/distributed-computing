@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  api:
+    image: linkextractor-api:step4-python
+    build: ./api
+    ports:
+      - "5000:5000"
+    networks:
+      - wordpress_network
+
+  web:
+    image: php:7-apache
+    ports:
+      - "80:80"
+    environment:
+      - API_ENDPOINT=http://api:5000/api/
+    volumes:
+      - ./www:/var/www/html
+    networks:
+      - wordpress_network
+
+  locust:
+    image: locustio/locust
+    depends_on:
+      - web
+    command: -f /mnt/locust/locustfile.py  --master
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./locust-task:/mnt/locust
+
+    environment:
+      - LOCUST_HOST=http://web:80
+    networks:
+      - wordpress_network
+    # networks:
+    #   network-example:
+    #     ipv4_address: 10.5.0.7
+
+  worker:
+    image: locustio/locust
+    command: -f /mnt/locust/locustfile.py --worker --master-host=locust
+    volumes:
+      - ./locust-task:/mnt/locust
+    # networks:
+    #   network-example:
+    #     ipv4_address: 10.5.0.8
+    # networks:
+    #   network-example:
+    #     driver: bridge
+    #     ipam:
+    #       config:
+    #         - subnet: 10.5.0.0/16
+    #           gateway: 10.5.0.1
+    networks:
+      - wordpress_network
+
+networks:
+  wordpress_network:
+    driver: bridge
