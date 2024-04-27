@@ -2,24 +2,29 @@ version: '3'
 
 services:
   api:
-    image: linkextractor-api:step4-python
+    image: linkextractor-api:step6-ruby
     build: ./api
     ports:
-      - "5000:5000"
+      - "4567:4567"
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./logs:/app/logs
     networks:
       - wordpress_network
-
   web:
-    image: php:7-apache
+    image: linkextractor-web:step6-php
+    build: ./www
     ports:
       - "80:80"
     environment:
-      - API_ENDPOINT=http://api:5000/api/
-    volumes:
-      - ./www:/var/www/html
+      - API_ENDPOINT=http://api:4567/api/
     networks:
       - wordpress_network
-
+  redis:
+    image: redis
+    networks:
+      - wordpress_network
   locust:
     image: locustio/locust
     depends_on:
@@ -34,13 +39,25 @@ services:
       - LOCUST_HOST=http://web:80
     networks:
       - wordpress_network
+    # networks:
+    #   network-example:
+    #     ipv4_address: 10.5.0.7
 
   worker:
     image: locustio/locust
     command: -f /mnt/locust/locustfile.py --worker --master-host=locust
     volumes:
       - ./locust-task:/mnt/locust
-
+    # networks:
+    #   network-example:
+    #     ipv4_address: 10.5.0.8
+    # networks:
+    #   network-example:
+    #     driver: bridge
+    #     ipam:
+    #       config:
+    #         - subnet: 10.5.0.0/16
+    #           gateway: 10.5.0.1
     networks:
       - wordpress_network
 
